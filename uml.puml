@@ -1,0 +1,312 @@
+@startuml
+!theme hacker
+skinparam classAttributeIconSize 0
+
+' ==========================
+' MODEL (Logika Biznesowa)
+' ==========================
+
+class User {
+    - int id
+    - String username
+    - String email
+    - List<Budget> budgets
+    + List<Budget> getBudgets()
+    + void addBudget(Budget budget)
+}
+
+class Budget {
+    - double income
+    - List<Transaction> expenses
+    - double balance
+    - Map<Category, Double> limits
+    + void addTransaction(Transaction transaction)
+    + void setLimit(Category category, double limit)
+    + double calculateBalance()
+}
+
+class Transaction {
+    - int id
+    - double amount
+    - Category category
+    - String description
+    - LocalDate date
+    + double getAmount()
+    + Category getCategory()
+    + String getDescription()
+}
+
+class Report {
+    - List<Transaction> transactions
+    - Map<Category, Double> categorySummary
+    - double totalIncome
+    - double totalExpenses
+    - double balance
+    + generateReport(): String
+}
+
+interface ReportBuilder {
+    + setTransactions(List<Transaction> transactions)
+    + setCategorySummary(Map<Category, Double> categorySummary)
+    + setIncome(double income)
+    + setExpenses(double expenses)
+    + setBalance(double balance)
+    + getResult(): Report
+}
+
+class ReportBuilderImpl implements ReportBuilder {
+    - List<Transaction> transactions
+    - Map<Category, Double> categorySummary
+    - double totalIncome
+    - double totalExpenses
+    - double balance
+    + setTransactions(List<Transaction> transactions)
+    + setCategorySummary(Map<Category, Double> categorySummary)
+    + setIncome(double income)
+    + setExpenses(double expenses)
+    + setBalance(double balance)
+    + getResult(): Report
+}
+
+class Director {
+    - ReportBuilder builder
+    + constructSimpleReport(List<Transaction> transactions, double income, double expenses)
+    + constructDetailedReport(List<Transaction> transactions, Map<Category, Double> categorySummary, double income, double expenses)
+}
+
+enum Category {
+    FOOD
+    TRANSPORT
+    UTILITIES
+    ENTERTAINMENT
+}
+
+' ==========================
+' STRATEGIE
+' ==========================
+
+interface IForecastStrategy {
+    + forecastExpenses(List<Transaction> transactions): double
+}
+
+interface IExportStrategy {
+    + exportData(List<Transaction> transactions): String
+}
+
+class ExpenseForecast {
+    - List<Transaction> transactions
+    - IForecastStrategy strategy
+    + ExpenseForecast(List<Transaction> transactions, IForecastStrategy strategy)
+    + setStrategy(IForecastStrategy strategy)
+    + calculateForecast(): double
+}
+
+class FileExporter {
+    - IExportStrategy exportStrategy
+    + FileExporter(IExportStrategy exportStrategy)
+    + setExportStrategy(IExportStrategy exportStrategy)
+    + export(List<Transaction> transactions): String
+}
+
+class LinearForecastStrategy implements IForecastStrategy {
+    + forecastExpenses(List<Transaction> transactions): double
+}
+
+class HistoricalForecastStrategy implements IForecastStrategy {
+    + forecastExpenses(List<Transaction> transactions): double
+}
+
+class CsvExportStrategy implements IExportStrategy {
+    + exportData(List<Transaction> transactions): String
+}
+
+class JsonExportStrategy implements IExportStrategy {
+    + exportData(List<Transaction> transactions): String
+}
+
+class XmlExportStrategy implements IExportStrategy {
+    + exportData(List<Transaction> transactions): String
+}
+
+' ==========================
+' ADAPTERY (Eksport)
+' ==========================
+
+' Adapter dla CSV
+class CsvExportAdapter implements IExportStrategy {
+    - CsvExportStrategy _csvExportStrategy
+    + exportData(List<Transaction> transactions): String
+}
+
+' Adapter dla JSON
+class JsonExportAdapter implements IExportStrategy {
+    - JsonExportStrategy _jsonExportStrategy
+    + exportData(List<Transaction> transactions): String
+}
+
+' Adapter dla XML
+class XmlExportAdapter implements IExportStrategy {
+    - XmlExportStrategy _xmlExportStrategy
+    + exportData(List<Transaction> transactions): String
+}
+
+' ==========================
+' OBSERWATOR
+' ==========================
+' Interfejs Obserwatora
+interface IBudgetObserver {
+    + notifyBudgetExceeded(String category, double limit, double actual)
+    + notifySavingsGoalReached(double goal, double actual)
+}
+
+' Klasa Obserwowana (Planer Budżetu)
+class BudgetPlanner {
+    - List<IBudgetObserver> observers
+    - double currentExpenses
+    - double savingsGoal
+    - Map<String, Double> categoryLimits
+    + void addObserver(IBudgetObserver observer)
+    + void removeObserver(IBudgetObserver observer)
+    + void setSavingsGoal(double goal)
+    + void addExpense(String category, double amount)
+    + void setCategoryLimit(String category, double limit)
+}
+
+' Przykładowe implementacje Obserwatorów
+class BudgetAlert implements IBudgetObserver {
+    + notifyBudgetExceeded(String category, double limit, double actual)
+    + notifySavingsGoalReached(double goal, double actual)
+}
+
+class EmailNotifier implements IBudgetObserver {
+    + notifyBudgetExceeded(String category, double limit, double actual)
+    + notifySavingsGoalReached(double goal, double actual)
+}
+
+class MobileAppNotifier implements IBudgetObserver {
+    + notifyBudgetExceeded(String category, double limit, double actual)
+    + notifySavingsGoalReached(double goal, double actual)
+}
+
+' ==========================
+' ARCHITEKTURA MVC
+' ==========================
+
+' Model classes
+class Model {
+    + processBusinessLogic()
+    + manageData()
+}
+
+' View classes
+class View {
+    + displayData(Model model)
+    + receiveUserInput()
+}
+
+' Controller classes
+class Controller {
+    + handleInput(View view)
+    + updateModel(Model model)
+    + refreshView(View view)
+}
+
+' Relationships in MVC
+Model --> View : updates
+View --> Controller : forwards input
+Controller --> Model : modifies
+Controller --> View : refreshes
+
+' ==========================
+' CONTROLLER (LOGIKA APLIKACJI)
+' ==========================
+
+' Klasa abstrakcyjna dla kontrolerów
+abstract class AbstractController {
+    + void handleRequest()
+    + void updateModel(Model model)
+    + void refreshView(View view)
+}
+
+' Interfejs kontrolera użytkowników
+interface IUserController {
+    + void createUser(String username, String password)
+    + void loginUser(String username, String password)
+}
+
+' Implementacja kontrolera użytkowników
+class UserController extends AbstractController {
+    + void createUser(String username, String password)
+    + void loginUser(String username, String password)
+}
+
+' ==========================
+' WZORZEC COMMAND
+' ==========================
+' Interfejs Command
+interface ICommand {
+    + execute()
+}
+
+' Klasa bazowa dla operacji na transakcjach
+abstract class TransactionCommand {
+    + execute()
+}
+
+' Klasa reprezentująca dodanie transakcji
+class AddTransactionCommand {
+    + execute()
+}
+
+' Klasa kontrolera transakcji, który korzysta z TransactionCommand
+class TransactionController extends AbstractController {
+    + addTransaction()
+    + removeTransaction()
+}
+
+' Klasa reprezentująca transakcję
+class Transaction {
+    + void execute()
+}
+
+' ==========================
+' RELACJE I POŁĄCZENIA
+' ==========================
+
+' Relacje w modelu
+User --> Budget
+Budget --> Transaction
+Transaction --> Category
+
+' Relacje w raporcie
+ReportBuilder <|.. ReportBuilderImpl
+Director --> ReportBuilder
+Director --> Report
+ReportBuilderImpl --> Report
+Report --> Transaction
+Report --> Category
+
+' Relacje strategii
+IForecastStrategy <|.. LinearForecastStrategy
+IForecastStrategy <|.. HistoricalForecastStrategy
+ExpenseForecast --> IForecastStrategy
+ExpenseForecast --> Transaction
+
+IExportStrategy <|.. CsvExportStrategy
+IExportStrategy <|.. JsonExportStrategy
+IExportStrategy <|.. XmlExportStrategy
+FileExporter --> IExportStrategy
+FileExporter --> Transaction
+
+' Adaptery
+CsvExportAdapter --> CsvExportStrategy
+JsonExportAdapter --> JsonExportStrategy
+XmlExportAdapter --> XmlExportStrategy
+
+' Relacje obserwatorów
+BudgetPlanner --> IBudgetObserver : notifies
+IBudgetObserver <|.. BudgetAlert
+IBudgetObserver <|.. EmailNotifier
+IBudgetObserver <|.. MobileAppNotifier
+
+@enduml
